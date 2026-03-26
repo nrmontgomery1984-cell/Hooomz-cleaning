@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HOOOMZ — Cleaning System</title>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --linen:#F0EDE8;--linen2:#E8E3DC;--linen3:#DDD7CF;
+  --ink:#111010;--ink2:#2A2826;--ink3:#6B6560;
+  --red:#C0392B;--amber:#D4850A;--green:#2E7D32;
+  --border:#D5CFC6;--card:#FAF8F5;
+}
+body{background:var(--linen);color:var(--ink);font-family:'Figtree',sans-serif;font-size:14px;min-height:100vh}
+
+/* HEADER */
+.header{background:var(--ink);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;border-bottom:3px solid var(--amber)}
+.logo{font-family:'DM Mono',monospace;font-size:14px;letter-spacing:.12em;color:var(--linen);display:flex;align-items:center;gap:2px}
+.o1{color:var(--red)}.o2{color:var(--amber)}.o3{color:var(--green)}
+.logo-sub{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.15em;color:rgba(255,255,255,.3);margin-top:2px}
+.hdr-right{text-align:right}
+.hdr-prog{font-family:'DM Mono',monospace;font-size:11px;color:rgba(255,255,255,.4);letter-spacing:.08em}
+.hdr-prog strong{color:var(--amber);font-size:13px}
+.hdr-bar{width:120px;height:3px;background:rgba(255,255,255,.1);border-radius:2px;margin-top:5px;overflow:hidden;margin-left:auto}
+.hdr-fill{height:100%;background:var(--amber);transition:width .4s}
+
+/* FILTER BAR */
+.filter-bar{background:var(--ink2);padding:14px 24px 16px;border-bottom:1px solid rgba(255,255,255,.07);position:sticky;top:57px;z-index:190}
+.filter-row{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+.filter-row:last-child{margin-bottom:0}
+.f-label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.3);width:76px;flex-shrink:0}
+.f-pills{display:flex;flex-wrap:wrap;gap:5px;flex:1}
+.pill{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.55);font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.05em;padding:5px 12px;cursor:pointer;border-radius:2px;transition:all .12s;white-space:nowrap}
+.pill:hover{background:rgba(255,255,255,.1);color:rgba(255,255,255,.85)}
+.pill.on{background:var(--amber);border-color:var(--amber);color:var(--ink);font-weight:500}
+.f-count{font-family:'DM Mono',monospace;font-size:10px;color:rgba(255,255,255,.28);white-space:nowrap;padding-top:2px}
+
+/* LAYOUT */
+.body-wrap{display:grid;grid-template-columns:220px 1fr;min-height:calc(100vh - 57px - 108px)}
+
+/* SIDEBAR */
+.sidebar{background:var(--ink);border-right:1px solid rgba(255,255,255,.05);padding:14px 0;position:sticky;top:165px;height:calc(100vh - 165px);overflow-y:auto}
+.sb-label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.22);padding:8px 16px 6px}
+.room-btn{width:100%;background:none;border:none;border-left:3px solid transparent;padding:9px 14px;text-align:left;cursor:default;display:flex;align-items:center;gap:8px}
+.room-btn.clickable{cursor:pointer;transition:background .1s}
+.room-btn.clickable:hover{background:rgba(255,255,255,.04)}
+.room-btn.active{background:rgba(212,133,10,.1);border-left-color:var(--amber)}
+.room-btn.complete{border-left-color:var(--green)}
+.rb-icon{font-size:14px;width:18px;text-align:center;flex-shrink:0}
+.rb-info{flex:1;min-width:0}
+.rb-name{font-size:13px;font-weight:500;color:var(--linen);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rb-meta{font-family:'DM Mono',monospace;font-size:10px;color:rgba(255,255,255,.28);display:block;margin-top:1px}
+.rb-pbar{height:2px;background:rgba(255,255,255,.08);border-radius:1px;margin-top:4px;overflow:hidden}
+.rb-pfill{height:100%;border-radius:1px;transition:width .3s}
+.rb-dot{width:14px;height:14px;border-radius:50%;border:1.5px solid rgba(255,255,255,.13);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:8px;color:transparent;margin-left:auto}
+.rb-dot.ok{background:var(--green);border-color:var(--green);color:#fff}
+
+/* MAIN */
+.main{padding:28px 32px}
+
+/* ── ALL-ROOMS MODE: stage blocks ── */
+.mode-label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--ink3);margin-bottom:20px;padding-bottom:10px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.mode-label span{color:var(--amber)}
+
+.stage-block{margin-bottom:32px}
+.stage-hdr{display:flex;align-items:center;gap:12px;margin-bottom:12px;padding-bottom:12px;border-bottom:2px solid var(--ink)}
+.stage-badge{min-width:32px;height:32px;background:var(--ink);color:var(--linen);font-family:'DM Mono',monospace;font-size:11px;font-weight:500;display:flex;align-items:center;justify-content:center;border-radius:2px;flex-shrink:0;padding:0 8px}
+.stage-title{font-size:17px;font-weight:700;letter-spacing:-.01em}
+.stage-desc{font-size:12px;color:var(--ink3);margin-top:2px}
+.stage-prog{margin-left:auto;font-family:'DM Mono',monospace;font-size:11px;color:var(--ink3);white-space:nowrap}
+.stage-prog strong{color:var(--ink)}
+
+.room-group-hdr{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);padding:5px 0 5px 10px;border-left:2px solid var(--border);margin:10px 0 5px;display:flex;align-items:center;gap:7px}
+
+/* ── ROOM MODE: header ── */
+.room-header{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid var(--border)}
+.rh-eyebrow{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink3);margin-bottom:5px}
+.rh-title{font-size:26px;font-weight:700;letter-spacing:-.02em;display:flex;align-items:center;gap:10px}
+.rh-desc{font-size:13px;color:var(--ink3);margin-top:5px;max-width:500px;line-height:1.6}
+.rh-right{text-align:right;flex-shrink:0}
+.rh-num{font-family:'DM Mono',monospace;font-size:28px;font-weight:500;line-height:1}
+.rh-num span{font-size:16px;color:var(--ink3)}
+.rh-numlabel{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink3);margin-top:3px}
+.rh-bar{width:100px;height:3px;background:var(--border);border-radius:2px;margin-top:8px;overflow:hidden}
+.rh-fill{height:100%;background:var(--amber);transition:width .3s}
+
+.phase{margin-bottom:18px}
+.phase-hdr{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.phase-n{width:22px;height:22px;background:var(--ink);color:var(--linen);font-family:'DM Mono',monospace;font-size:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;border-radius:2px}
+.phase-name{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+.phase-prod{margin-left:auto;font-family:'DM Mono',monospace;font-size:10px;color:var(--amber);background:rgba(212,133,10,.08);border:1px solid rgba(212,133,10,.2);padding:2px 8px;border-radius:2px}
+
+/* TASK ROW */
+.task{background:var(--card);border:1px solid var(--border);border-left:3px solid var(--border);margin-bottom:5px;cursor:pointer;transition:border-color .12s}
+.task:hover{border-left-color:var(--amber);border-color:rgba(212,133,10,.25)}
+.task.done{border-left-color:var(--green);opacity:.58}
+.task.done .t-main{text-decoration:line-through;color:var(--ink3)}
+.task-inner{display:flex;align-items:flex-start;gap:10px;padding:10px 13px}
+.t-chk{width:17px;height:17px;border:1.5px solid var(--border);border-radius:2px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;background:#fff;margin-top:2px;color:transparent}
+.task.done .t-chk{background:var(--green);border-color:var(--green);color:#fff}
+.t-body{flex:1;min-width:0}
+.t-main{font-size:13px;font-weight:500;line-height:1.4}
+.t-detail{font-size:12px;color:var(--ink3);margin-top:3px;line-height:1.5}
+.t-tags{display:flex;gap:5px;flex-shrink:0;flex-wrap:wrap;align-items:flex-start;min-width:0}
+.ttag{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.05em;text-transform:uppercase;padding:2px 7px;border-radius:2px;border:1px solid var(--border);color:var(--ink3);white-space:nowrap}
+.ttag.d{border-color:var(--red);color:var(--red)}
+.ttag.w{border-color:var(--amber);color:var(--amber)}
+.ttag.s{border-color:var(--green);color:var(--green)}
+.ttag.room-tag{background:var(--linen2);border-color:var(--linen3)}
+
+/* SIGN OFF */
+.signoff{background:var(--ink);padding:18px 22px;margin-top:28px;border-left:4px solid var(--amber);border-radius:0 4px 4px 0}
+.so-title{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--amber);margin-bottom:12px}
+.so-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:14px}
+.so-item{display:flex;align-items:flex-start;gap:7px;cursor:pointer}
+.so-box{width:14px;height:14px;border:1.5px solid rgba(255,255,255,.2);border-radius:2px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;color:transparent;margin-top:2px}
+.so-item.chk .so-box{background:var(--green);border-color:var(--green);color:#fff}
+.so-item.chk .so-text{text-decoration:line-through;color:rgba(255,255,255,.3)}
+.so-text{font-size:12px;color:rgba(255,255,255,.8);line-height:1.4}
+.so-btn{width:100%;background:var(--amber);color:var(--ink);border:none;padding:10px;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:500;cursor:pointer;border-radius:2px;margin-top:4px}
+.so-btn:hover{opacity:.85}
+.so-btn.done-btn{background:var(--green);color:#fff;cursor:default}
+.complete-banner{background:var(--green);color:#fff;padding:10px 16px;border-radius:4px;margin-bottom:20px;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.08em}
+
+.empty{padding:28px;text-align:center;color:var(--ink3);font-size:13px;background:var(--card);border:1px dashed var(--border);border-radius:4px}
+.reset-row{display:flex;align-items:center;justify-content:space-between;margin-top:32px;padding-top:18px;border-top:1px solid var(--border)}
+.reset-row span{font-size:12px;color:var(--ink3)}
+.rst{background:none;border:1px solid var(--border);color:var(--ink3);font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;padding:5px 12px;cursor:pointer;border-radius:2px}
+.rst:hover{border-color:var(--red);color:var(--red)}
+
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#333;border-radius:2px}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div>
+    <div class="logo">H<span class="o1">O</span><span class="o2">O</span><span class="o3">O</span>MZ INTERIORS</div>
+    <div class="logo-sub">CLEANING SYSTEM v1.0</div>
+  </div>
+  <div class="hdr-right">
+    <div class="hdr-prog">Progress: <strong id="gpct">0%</strong></div>
+    <div class="hdr-bar"><div class="hdr-fill" id="gbar" style="width:0%"></div></div>
+  </div>
+</header>
+
+<div class="filter-bar">
+  <div class="filter-row">
+    <span class="f-label">Room</span>
+    <div class="f-pills" id="roomFilter"></div>
+  </div>
+  <div class="filter-row">
+    <span class="f-label">Frequency</span>
+    <div class="f-pills" id="freqFilter"></div>
+    <span class="f-count" id="fcount"></span>
+  </div>
+  <div class="filter-row">
+    <span class="f-label">Task type</span>
+    <div class="f-pills" id="typeFilter"></div>
+  </div>
+</div>
+
+<div class="body-wrap">
+  <nav class="sidebar" id="sidebar"></nav>
+  <main class="main" id="main"></main>
+</div>
+
+<script>
+const ROOMS=[
+{id:"kitchen",icon:"🍳",name:"Kitchen",desc:"Food contact surfaces. Never mix bleach with ammonia. Pre-treat stovetop before scrubbing.",
+phases:[
+{name:"Clear & pre-treat",prod:"Zep Degreaser",tasks:[
+{t:"Remove all items from countertops",d:"Stack to one side. Do not place on floor.",freq:"d",type:"declutter"},
+{t:"Empty and wipe inside microwave",d:"Spray Microban, dwell 1 min. Wipe ceiling, walls, turntable. Hand-wash turntable.",freq:"w",type:"wipe"},
+{t:"Pre-spray stovetop with degreaser",d:"Apply Zep to burner grates and drip pans. Soak 5 min before scrubbing.",freq:"w",type:"scrub"},
+{t:"Empty and wipe sink basin",d:"Remove dishes. Spray all-purpose, wipe basin, faucet, surrounding ledge.",freq:"d",type:"wipe"}]},
+{name:"Appliances & fixtures",prod:"Weiman SS + Microban",tasks:[
+{t:"Wipe exterior of refrigerator",d:"Stainless: Weiman with grain direction. Non-stainless: Microban + microfibre.",freq:"w",type:"fixtures"},
+{t:"Wipe stovetop surface and knobs",d:"After dwell: scrub grates with Scotch-Brite. Remove knobs — soak monthly.",freq:"w",type:"scrub"},
+{t:"Wipe oven exterior and handle",d:"Microban on door exterior. Monthly: oven interior with oven cleaner.",freq:"w",type:"wipe"},
+{t:"Clean dishwasher exterior and door seal",d:"Wipe exterior. Run finger along rubber seal — wipe clean.",freq:"w",type:"wipe"},
+{t:"Polish sink and faucet",d:"Bar Keepers Friend on basin if stained. Dry chrome — water spots show.",freq:"w",type:"fixtures"}]},
+{name:"Surfaces & cabinetry",prod:"Microban All-Purpose",tasks:[
+{t:"Wipe all countertops top-to-back",d:"Spray Microban. Wipe away from wall. Move items one section at a time.",freq:"d",type:"wipe"},
+{t:"Wipe cabinet door fronts and handles",d:"Damp microfibre — no excess product on wood. Handles accumulate grease.",freq:"w",type:"wipe"},
+{t:"Wipe backsplash tiles",d:"Damp microfibre in horizontal strokes. Grout lines: scrub brush if needed.",freq:"w",type:"scrub"},
+{t:"Inside cabinets — wipe shelves",d:"Remove items. Check for spills, expired product, or pest evidence.",freq:"m",type:"declutter"}]},
+{name:"Floors",prod:"Bona / Microban diluted",tasks:[
+{t:"Sweep or vacuum entire floor",d:"Corners and under toe-kicks. Move small appliances.",freq:"d",type:"floors"},
+{t:"Mop floor",d:"Hardwood: Bona only, no excess water. Tile: diluted Microban. Wring thoroughly.",freq:"w",type:"floors"}]}],
+signoff:["All surfaces clean and dry","No streaks on appliance fronts","Sink shining — no watermarks","Floor clean, no sticky spots","All items returned to position","No product residue on surfaces"]},
+
+{id:"bathroom",icon:"🚿",name:"Bathrooms",desc:"Top to bottom always. Toilet is last. Never use same cloth on toilet as other surfaces.",
+phases:[
+{name:"Clear & pre-treat",prod:"Lysol Bowl Cleaner",tasks:[
+{t:"Apply toilet bowl cleaner — let dwell",d:"Squeeze Lysol under rim. Dwell 5 min while cleaning other surfaces first.",freq:"w",type:"sanitize"},
+{t:"Remove all items from counters and shower",d:"Place outside bathroom. Never clean around items.",freq:"w",type:"declutter"},
+{t:"Spray shower/tub — let dwell",d:"Coat all surfaces — walls, floor, fixtures. 2-minute dwell minimum.",freq:"w",type:"sanitize"}]},
+{name:"Shower & tub",prod:"Bar Keepers Friend + Microban",tasks:[
+{t:"Scrub shower walls top to bottom",d:"Non-scratch pad + Bar Keepers Friend on soap scum/calcium. Rinse thoroughly.",freq:"w",type:"scrub"},
+{t:"Scrub shower floor / tub basin",d:"Focus on corners and grout. Rinse completely.",freq:"w",type:"scrub"},
+{t:"Clean shower fixtures and head",d:"Wipe chrome. Calcium on showerhead: bag of white vinegar, 15 min soak.",freq:"w",type:"fixtures"},
+{t:"Wipe glass door or clean curtain",d:"Glass: Windex + squeegee from top. Curtain: check bottom hem for mould.",freq:"w",type:"glass"}]},
+{name:"Vanity & sink",prod:"Microban + Bar Keepers Friend",tasks:[
+{t:"Wipe mirror with Windex",d:"Z-pattern from top. No circular motions — causes streaks.",freq:"w",type:"glass"},
+{t:"Clean sink basin and faucet",d:"Bar Keepers Friend on staining. Wipe chrome to dry.",freq:"w",type:"fixtures"},
+{t:"Wipe vanity counter and cabinet fronts",d:"Clear counter fully. Handles accumulate toothpaste.",freq:"w",type:"wipe"},
+{t:"Inside vanity — wipe and check product",d:"Remove items. Wipe shelf. Dispose of expired product.",freq:"m",type:"declutter"}]},
+{name:"Toilet — dedicated cloth only",prod:"Lysol Spray + Bowl Cleaner",tasks:[
+{t:"Wipe toilet exterior — tank, handle, base",d:"Dedicated cloth only. Tank lid, body, handle, hinge area, base, floor around base.",freq:"w",type:"sanitize"},
+{t:"Wipe toilet seat — both sides, lid both sides",d:"Under rim first, then top, lid inside, lid top.",freq:"w",type:"sanitize"},
+{t:"Scrub toilet bowl",d:"Dedicated brush only. Under rim, sides, bottom. Flush while brush is in bowl.",freq:"w",type:"scrub"}]},
+{name:"Floors & finish",prod:"Microban diluted",tasks:[
+{t:"Wipe baseboards and behind toilet",d:"Damp microfibre. Behind toilet is high-accumulation — never skip.",freq:"w",type:"wipe"},
+{t:"Mop/wipe floor in sections",d:"Far corner toward door. Wring tightly — no standing water.",freq:"w",type:"floors"},
+{t:"Replace items, restock supplies",d:"Return all items. Fold toilet paper end. Hand towel edge facing out.",freq:"w",type:"declutter"}]}],
+signoff:["Mirror streak-free","No soap scum on shower surfaces","Toilet bowl clean under rim","Floor dry — no pooling","All fixtures wiped to shine","Toilet cloth laundered or disposed"]},
+
+{id:"bedroom",icon:"🛏️",name:"Bedrooms",desc:"Dust, linens, and air quality. Move furniture to clean — do not clean around it.",
+phases:[
+{name:"Linens & soft surfaces",prod:"Lysol Fabric Spray",tasks:[
+{t:"Strip and replace bed linens",d:"Remove pillowcases, sheets, duvet cover. Spray bare mattress with Lysol Fabric Spray.",freq:"w",type:"sanitize"},
+{t:"Shake and fluff pillows and duvet",d:"Outside if possible. Check pillow covers for staining.",freq:"w",type:"declutter"},
+{t:"Make bed — tight corners, centred duvet",d:"Hospital corners. Duvet centred — equal hang both sides.",freq:"d",type:"declutter"}]},
+{name:"Dust — top to bottom",prod:"Dry microfibre",tasks:[
+{t:"Dust ceiling fan blades",d:"Pillowcase method — slide over blade, pull back to trap dust.",freq:"w",type:"dust"},
+{t:"Dust light fixtures and furniture tops",d:"Dry microfibre from highest point first.",freq:"w",type:"dust"},
+{t:"Wipe nightstands and dresser surfaces",d:"Lightly damp microfibre. Clear items, wipe, replace. Wipe lamp bases.",freq:"w",type:"wipe"},
+{t:"Wipe window sill and blinds",d:"Sill: damp microfibre. Blinds: close one direction, wipe, reverse, wipe.",freq:"w",type:"wipe"},
+{t:"Wipe baseboards",d:"Damp microfibre along full perimeter. Corners accumulate lint.",freq:"m",type:"wipe"}]},
+{name:"Floors",prod:"Vacuum + Bona if hardwood",tasks:[
+{t:"Vacuum rugs and carpet",d:"Slow passes — 2 per section minimum. Move furniture.",freq:"w",type:"floors"},
+{t:"Vacuum or mop hard floors",d:"Vacuum corners first. Mop with Bona if hardwood.",freq:"w",type:"floors"}]}],
+signoff:["Bed made — clean, tight, presentable","No visible dust on surfaces","Floors vacuumed under furniture","Nightstands cleared and wiped","No items left on floor"]},
+
+{id:"living",icon:"🛋️",name:"Living / Common",desc:"High visual impact zone. Emphasis on dusting, upholstery, and glass surfaces.",
+phases:[
+{name:"Declutter & tidy",prod:"—",tasks:[
+{t:"Remove all items from floors and surfaces",d:"Return items to their home room. Nothing on coffee table except intentional décor.",freq:"d",type:"declutter"},
+{t:"Fluff and arrange cushions and throws",d:"Karate-chop cushions. Same fold on throws every time.",freq:"d",type:"declutter"}]},
+{name:"Dust & wipe",prod:"Windex + Microban",tasks:[
+{t:"Dust ceiling fan, fixtures, cornices",d:"Highest point first. Pillowcase method on fans.",freq:"w",type:"dust"},
+{t:"Wipe TV screen and stand",d:"Dry microfibre only on screen. Stand: Microban on damp cloth.",freq:"w",type:"wipe"},
+{t:"Wipe coffee table, side tables, shelves",d:"Move all objects. Wipe full surface. Replace intentionally.",freq:"w",type:"wipe"},
+{t:"Clean glass surfaces and mirrors",d:"Windex, Z-pattern. Fresh face of cloth for each surface.",freq:"w",type:"glass"},
+{t:"Wipe baseboards and door frames",d:"Damp microfibre. Top of door frame is high-accumulation.",freq:"m",type:"wipe"}]},
+{name:"Upholstery & floors",prod:"Vacuum + Lysol Fabric Spray",tasks:[
+{t:"Vacuum upholstered furniture",d:"Remove and vacuum under cushions. Crevice tool on seams.",freq:"w",type:"floors"},
+{t:"Spray upholstery with Lysol Fabric Spray",d:"Light mist only — 6 inches away. Let air dry — do not rub in.",freq:"w",type:"sanitize"},
+{t:"Vacuum area rugs",d:"Both directions. Move furniture for full rug access.",freq:"w",type:"floors"},
+{t:"Vacuum or mop hard floors",d:"Full perimeter with crevice tool first. Then full floor.",freq:"w",type:"floors"}]}],
+signoff:["No items on floor","All glass streak-free","Cushions and throws neat","Floors vacuumed under furniture","No visible dust or TV smudges"]},
+
+{id:"laundry",icon:"🫧",name:"Laundry Room",desc:"Moisture management. Prevent mould in drum seals and lint trap fires.",
+phases:[
+{name:"Appliance interior",prod:"Microban + Affresh",tasks:[
+{t:"Clean washer drum and door seal",d:"Wipe rubber seal — check fold for mould. Affresh tablet cleaning cycle monthly.",freq:"m",type:"sanitize"},
+{t:"Clean dryer lint trap and housing",d:"Remove trap and clean screen. Vacuum lint housing. Fire hazard — never skip.",freq:"d",type:"inspect"},
+{t:"Wipe washer door glass and controls",d:"Microban on damp cloth — controls, glass, dispenser exterior.",freq:"w",type:"wipe"},
+{t:"Clean detergent dispenser drawer",d:"Pull out fully. Rinse hot water. Scrub with toothbrush if residue.",freq:"m",type:"scrub"}]},
+{name:"Surfaces & floors",prod:"Microban All-Purpose",tasks:[
+{t:"Wipe top of washer and dryer",d:"Remove items. Wipe full surface including back edge.",freq:"w",type:"wipe"},
+{t:"Wipe utility sink and surroundings",d:"Microban spray. Bar Keepers Friend on staining.",freq:"w",type:"fixtures"},
+{t:"Vacuum and mop floor",d:"Lint accumulates heavily — pull appliances out if accessible.",freq:"w",type:"floors"}]}],
+signoff:["Lint trap clean","Door seal wiped — no mould","Tops of appliances clear","Floor free of lint and debris"]},
+
+{id:"garage",icon:"🔧",name:"Garage / Utility",desc:"Safety and organization. Chemicals stored correctly. Check for hazards every visit.",
+phases:[
+{name:"Organize & inspect",prod:"—",tasks:[
+{t:"Return all tools to designated storage",d:"Nothing on floor that belongs on shelf or pegboard.",freq:"w",type:"declutter"},
+{t:"Check chemical storage",d:"Flammables separate from oxidizers. All containers labelled. No leaking.",freq:"m",type:"inspect"},
+{t:"Check CO/smoke detector battery",d:"Press test button. Replace if no beep.",freq:"s",type:"inspect"}]},
+{name:"Surfaces & floor",prod:"Zep Degreaser + Broom",tasks:[
+{t:"Sweep entire floor",d:"Industrial broom. Work perimeter inward. Collect into dustpan.",freq:"w",type:"floors"},
+{t:"Treat oil/fluid stains on floor",d:"Kitty litter to absorb first. Then Zep degreaser, stiff brush, rinse.",freq:"m",type:"scrub"},
+{t:"Wipe workbench surfaces",d:"Clear tools. Wipe surface. Check for embedded fasteners.",freq:"w",type:"wipe"}]}],
+signoff:["Floor swept — no debris","All tools returned to storage","No tripping hazards","Chemical storage checked"]},
+
+{id:"office",icon:"💻",name:"Home Office",desc:"Electronics need dry-only or electronics-specific cleaning. Never spray directly onto screens.",
+phases:[
+{name:"Electronics",prod:"Dry microfibre + compressed air",tasks:[
+{t:"Blow out keyboard with compressed air",d:"Tilt keyboard to 75°. Short bursts between keys.",freq:"w",type:"dust"},
+{t:"Wipe keyboard and mouse",d:"Damp microfibre for keycaps. 70% isopropyl on cloth for mouse.",freq:"w",type:"sanitize"},
+{t:"Wipe monitor screen",d:"Dry microfibre only — gentle circles. Never paper towel.",freq:"w",type:"glass"},
+{t:"Dust monitor base and tower exterior",d:"Dry microfibre. Check vents — vacuum with soft brush.",freq:"w",type:"dust"}]},
+{name:"Desk & surfaces",prod:"Microban All-Purpose",tasks:[
+{t:"Clear and wipe desk surface fully",d:"Move monitor, keyboard. Wipe full desk. Replace intentionally.",freq:"w",type:"wipe"},
+{t:"Wipe phone handset and cables",d:"70% isopropyl on microfibre for handset and frequently touched cables.",freq:"w",type:"sanitize"},
+{t:"Wipe shelves and bookcase",d:"Remove books by section. Wipe shelf. Dust book spines.",freq:"m",type:"dust"}]},
+{name:"Floors",prod:"Vacuum",tasks:[
+{t:"Vacuum under desk and chair mat",d:"Lift chair mat — debris accumulates underneath.",freq:"w",type:"floors"},
+{t:"Wipe chair mat if hard plastic",d:"Microban on damp cloth. Flip if double-sided.",freq:"m",type:"wipe"}]}],
+signoff:["Screen clean — no smudges","Desk cleared and wiped","Keyboard and mouse sanitized","Floor vacuumed under desk"]},
+
+{id:"gym",icon:"🏋️",name:"Home Gym",desc:"High-sweat environment. Equipment sanitized after every use. Rubber floor needs specific products.",
+phases:[
+{name:"Equipment sanitize",prod:"Microban 24 + Lysol Spray",tasks:[
+{t:"Wipe all high-touch equipment surfaces",d:"Microban on cloth — handles, grips, seats, pins. Every piece, every session.",freq:"d",type:"sanitize"},
+{t:"Disinfect with Lysol spray — dwell 30 sec",d:"After Microban wipe: spray Lysol on contact surfaces. Let air dry.",freq:"d",type:"sanitize"},
+{t:"Wipe mirrors",d:"Windex, Z-pattern. Gym mirrors show smudges prominently.",freq:"w",type:"glass"},
+{t:"Inspect cables, straps, and padding for wear",d:"Fraying cables, cracked padding, loose bolts. Tag damaged equipment out of service.",freq:"m",type:"inspect"}]},
+{name:"Floors",prod:"Diluted Microban",tasks:[
+{t:"Sweep rubber flooring",d:"Industrial broom. Move equipment to sweep beneath.",freq:"w",type:"floors"},
+{t:"Mop rubber flooring",d:"No oil-based cleaners — degrades rubber. Diluted Microban only.",freq:"w",type:"floors"},
+{t:"Clean floor under equipment",d:"Pull out moveable equipment quarterly. Sweat accumulates beneath.",freq:"m",type:"sanitize"}]}],
+signoff:["All equipment surfaces sanitized and dry","Mirrors streak-free","Floor swept and mopped","No equipment damage noted"]},
+
+{id:"equipment",icon:"⚙️",name:"Equipment Room",desc:"Mechanical/utility room. Access clearance, filter maintenance, and leak inspection.",
+phases:[
+{name:"HVAC & mechanical",prod:"Vacuum + dry cloths",tasks:[
+{t:"Inspect and replace HVAC filter",d:"Replace if grey/loaded. MERV 8-11 for residential. Date the new filter.",freq:"m",type:"inspect"},
+{t:"Vacuum around furnace intake and vents",d:"Soft brush attachment. Clear dust from burner area and intake.",freq:"m",type:"dust"},
+{t:"Check water heater — base for moisture/rust",d:"Any rust staining or water marks: call a plumber.",freq:"m",type:"inspect"},
+{t:"Check sump pump operation",d:"Pour water into pit to trigger float. Confirm pump activates.",freq:"s",type:"inspect"}]},
+{name:"Surfaces & access",prod:"Microban + broom",tasks:[
+{t:"Sweep floor clear of debris",d:"Keep 3-foot clearance around all mechanical equipment — code requirement.",freq:"m",type:"floors"},
+{t:"Check exposed pipe insulation for damage",d:"Replace cracked/missing sections to prevent condensation or freezing.",freq:"s",type:"inspect"},
+{t:"Label any unlabeled valves or shutoffs",d:"Use adhesive tags. Document main shutoff location.",freq:"s",type:"inspect"}]}],
+signoff:["HVAC filter checked (replaced if needed)","No moisture at base of equipment","Access clearances maintained","No unlabeled critical shutoffs"]}
+];
+
+// Cleaning stage order — this IS the workflow sequence
+const STAGES=[
+  {type:"declutter", label:"1 — Declutter",      title:"Declutter the whole house",  desc:"Clear all rooms before touching a single cleaning product. Move everything back to its home."},
+  {type:"dust",      label:"2 — Dust",            title:"Dust top to bottom",         desc:"Ceiling fans, fixtures, and shelves first. Gravity pulls dust down — always before wiping surfaces."},
+  {type:"wipe",      label:"3 — Wipe surfaces",   title:"Wipe all surfaces",          desc:"Counters, cabinets, appliances. Damp microfibre. Work section by section, never wipe under unsupported items."},
+  {type:"scrub",     label:"4 — Scrub",           title:"Scrub & degrease",           desc:"Stovetop, grout, tub basin, toilet bowl. Products need dwell time — pre-treat was done in step 2."},
+  {type:"glass",     label:"5 — Glass & mirrors", title:"Glass & mirrors",            desc:"Windex and squeegee/microfibre. Z-pattern only. No circular motions."},
+  {type:"fixtures",  label:"6 — Fixtures",        title:"Polish fixtures",            desc:"Faucets, handles, appliance fronts. Dry to shine — water spots are visible immediately."},
+  {type:"sanitize",  label:"7 — Sanitize",        title:"Sanitize high-touch surfaces",desc:"Toilets, equipment grips, door seals. Let disinfectant dwell — do not immediately wipe off."},
+  {type:"floors",    label:"8 — Floors",          title:"Floors — vacuum then mop",   desc:"Floors are always last. Vacuum all rooms, then mop. Never mop before dust and debris are cleared."},
+  {type:"inspect",   label:"9 — Inspect",         title:"Inspect & safety check",     desc:"Lint traps, HVAC filters, chemical storage, detectors. Log anything that needs follow-up."},
+];
+
+const FREQS=[{v:"all",l:"All"},{v:"d",l:"Daily"},{v:"w",l:"Weekly"},{v:"m",l:"Monthly"},{v:"s",l:"Seasonal"}];
+const TYPES=[{v:"all",l:"All types"},{v:"declutter",l:"Declutter"},{v:"dust",l:"Dust"},{v:"wipe",l:"Wipe"},{v:"scrub",l:"Scrub"},{v:"glass",l:"Glass"},{v:"fixtures",l:"Fixtures"},{v:"sanitize",l:"Sanitize"},{v:"floors",l:"Floors"},{v:"inspect",l:"Inspect"}];
+const FLABELS={d:"Daily",w:"Weekly",m:"Monthly",s:"Seasonal"};
+
+let S={roomF:"all",singleRoom:null,freq:"all",type:"all",tasks:{},signoffs:{}};
+try{const r=localStorage.getItem("hz_v4");if(r)S=Object.assign(S,JSON.parse(r))}catch(e){}
+
+function save(){try{localStorage.setItem("hz_v4",JSON.stringify(S))}catch(e){}}
+function tk(rId,pi,ti){return rId+"_"+pi+"_"+ti}
+function sk(rId,i){return "so_"+rId+"_"+i}
+
+function taskVisible(t){
+  if(S.freq!=="all"&&t.freq!==S.freq)return false;
+  if(S.type!=="all"&&t.type!==S.type)return false;
+  return true;
+}
+
+function roomStats(room){
+  let total=0,done=0;
+  room.phases.forEach((ph,pi)=>ph.tasks.forEach((t,ti)=>{
+    if(!taskVisible(t))return;
+    total++;if(S.tasks[tk(room.id,pi,ti)])done++;
+  }));
+  return{total,done};
+}
+
+function isSO(room){return room.signoff.every((_,i)=>S.signoffs[sk(room.id,i)])}
+
+function globalStats(){
+  let t=0,d=0;
+  const rooms=S.roomF==="all"?ROOMS:ROOMS.filter(r=>r.id===S.roomF);
+  rooms.forEach(r=>{const s=roomStats(r);t+=s.total;d+=s.done});
+  return{total:t,done:d};
+}
+
+function countVisible(){
+  let n=0;
+  const rooms=S.roomF==="all"?ROOMS:ROOMS.filter(r=>r.id===S.roomF);
+  rooms.forEach(r=>r.phases.forEach(ph=>ph.tasks.forEach(t=>{if(taskVisible(t))n++})));
+  return n;
+}
+
+// ── TASK ROW HTML ──
+function taskHTML(room,pi,ti,t,showRoom){
+  const k=tk(room.id,pi,ti);
+  const isDone=!!S.tasks[k];
+  return`<div class="task${isDone?" done":""}" onclick="toggleTask('${room.id}',${pi},${ti})">
+    <div class="task-inner">
+      <div class="t-chk">${isDone?"✓":""}</div>
+      <div class="t-body">
+        <div class="t-main">${t.t}</div>
+        <div class="t-detail">${t.d}</div>
+      </div>
+      <div class="t-tags">
+        ${showRoom?`<span class="ttag room-tag">${room.icon} ${room.name}</span>`:""}
+        <span class="ttag ${t.freq}">${FLABELS[t.freq]}</span>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ── RENDER FILTERS ──
+function renderFilters(){
+  const roomOpts=[{v:"all",l:"All rooms"},...ROOMS.map(r=>({v:r.id,l:r.icon+" "+r.name}))];
+  document.getElementById("roomFilter").innerHTML=roomOpts.map(o=>`<button class="pill${S.roomF===o.v?" on":""}" onclick="setRoomFilter('${o.v}')">${o.l}</button>`).join("");
+  document.getElementById("freqFilter").innerHTML=FREQS.map(f=>`<button class="pill${S.freq===f.v?" on":""}" onclick="setFreq('${f.v}')">${f.l}</button>`).join("");
+  document.getElementById("typeFilter").innerHTML=TYPES.map(t=>`<button class="pill${S.type===t.v?" on":""}" onclick="setType('${t.v}')">${t.l}</button>`).join("");
+  const n=countVisible();
+  document.getElementById("fcount").textContent=n+" task"+(n===1?"":"s")+" match";
+}
+
+// ── RENDER SIDEBAR ──
+function renderSidebar(){
+  const rooms=S.roomF==="all"?ROOMS:ROOMS.filter(r=>r.id===S.roomF);
+  const isAllMode=S.roomF==="all";
+
+  document.getElementById("sidebar").innerHTML=`<div class="sb-label">Zones</div>`+
+    rooms.map(r=>{
+      const{total,done}=roomStats(r);
+      const pct=total>0?Math.round(done/total*100):0;
+      const so=isSO(r);
+      const isActive=!isAllMode&&S.singleRoom===r.id;
+      const fillColor=so?"var(--green)":pct>0?"var(--amber)":"rgba(255,255,255,.15)";
+      return`<div class="room-btn${isAllMode?"":" clickable"}${isActive?" active":""}${so?" complete":""}" ${isAllMode?"":"onclick=\"selectSingleRoom('"+r.id+"')\"" }>
+        <span class="rb-icon">${r.icon}</span>
+        <span class="rb-info">
+          <span class="rb-name">${r.name}</span>
+          <span class="rb-meta">${done}/${total} tasks</span>
+          <div class="rb-pbar"><div class="rb-pfill" style="width:${pct}%;background:${fillColor}"></div></div>
+        </span>
+        <span class="rb-dot${so?" ok":""}">${so?"✓":""}</span>
+      </div>`;
+    }).join("");
+}
+
+// ── RENDER MAIN: ALL ROOMS (sequential by stage) ──
+function renderAllRooms(){
+  const rooms=ROOMS; // all rooms always visible in this mode
+  let html=`<div class="mode-label">Whole-house checklist — tasks grouped by cleaning stage <span>${countVisible()} tasks</span></div>`;
+
+  // which stages to show
+  const stagesToShow=S.type==="all"?STAGES:STAGES.filter(s=>s.type===S.type);
+
+  stagesToShow.forEach(stage=>{
+    // collect tasks across all rooms for this stage
+    let stageTotal=0,stageDone=0;
+    let roomGroupsHTML="";
+
+    rooms.forEach(room=>{
+      let roomTasksHTML="";
+      room.phases.forEach((ph,pi)=>{
+        ph.tasks.forEach((t,ti)=>{
+          if(t.type!==stage.type)return;
+          if(!taskVisible(t))return;
+          stageTotal++;
+          if(S.tasks[tk(room.id,pi,ti)])stageDone++;
+          roomTasksHTML+=taskHTML(room,pi,ti,t,false);
+        });
+      });
+      if(roomTasksHTML){
+        roomGroupsHTML+=`<div class="room-group-hdr">${room.icon} ${room.name}</div>${roomTasksHTML}`;
+      }
+    });
+
+    if(!roomGroupsHTML)return;
+
+    html+=`<div class="stage-block">
+      <div class="stage-hdr">
+        <div class="stage-badge">${stage.label.split("—")[0].trim()}</div>
+        <div>
+          <div class="stage-title">${stage.title}</div>
+          <div class="stage-desc">${stage.desc}</div>
+        </div>
+        <div class="stage-prog"><strong>${stageDone}</strong>/${stageTotal}</div>
+      </div>
+      ${roomGroupsHTML}
+    </div>`;
+  });
+
+  if(!html.includes("stage-block"))html+=`<div class="empty">No tasks match the current filters.</div>`;
+
+  html+=`<div class="reset-row"><span>Reset all progress</span><button class="rst" onclick="resetAll()">Reset</button></div>`;
+  document.getElementById("main").innerHTML=html;
+}
+
+// ── RENDER MAIN: SINGLE ROOM ──
+function renderSingleRoom(){
+  const room=ROOMS.find(r=>r.id===S.singleRoom)||ROOMS[0];
+  S.singleRoom=room.id;
+
+  const{total,done}=roomStats(room);
+  const pct=total>0?Math.round(done/total*100):0;
+  const so=isSO(room);
+  const allSO=room.signoff.every((_,i)=>S.signoffs[sk(room.id,i)]);
+
+  let phasesHTML="";
+  let anyVisible=false;
+
+  room.phases.forEach((ph,pi)=>{
+    const vis=ph.tasks.filter(t=>taskVisible(t));
+    if(!vis.length)return;
+    anyVisible=true;
+    const tasksHTML=ph.tasks.map((t,ti)=>taskVisible(t)?taskHTML(room,pi,ti,t,false):"").join("");
+    phasesHTML+=`<div class="phase">
+      <div class="phase-hdr">
+        <div class="phase-n">${pi+1}</div>
+        <div class="phase-name">${ph.name}</div>
+        ${ph.prod!=="—"?`<div class="phase-prod">${ph.prod}</div>`:""}
+      </div>${tasksHTML}
+    </div>`;
+  });
+
+  if(!anyVisible)phasesHTML=`<div class="empty">No tasks match the current filters for this room.</div>`;
+
+  const soHTML=room.signoff.map((item,i)=>{
+    const c=!!S.signoffs[sk(room.id,i)];
+    return`<div class="so-item${c?" chk":""}" onclick="toggleSO('${room.id}',${i})">
+      <div class="so-box">${c?"✓":""}</div>
+      <div class="so-text">${item}</div>
+    </div>`;
+  }).join("");
+
+  document.getElementById("main").innerHTML=`
+    ${so?`<div class="complete-banner">✓ Room signed off and complete</div>`:""}
+    <div class="room-header">
+      <div>
+        <div class="rh-eyebrow">Zone ${ROOMS.findIndex(r=>r.id===room.id)+1} of ${ROOMS.length}</div>
+        <div class="rh-title">${room.icon} ${room.name}</div>
+        <div class="rh-desc">${room.desc}</div>
+      </div>
+      <div class="rh-right">
+        <div class="rh-num">${done}<span>/${total}</span></div>
+        <div class="rh-numlabel">Tasks done</div>
+        <div class="rh-bar"><div class="rh-fill" style="width:${pct}%"></div></div>
+      </div>
+    </div>
+    ${phasesHTML}
+    <div class="signoff">
+      <div class="so-title">✦ Quality sign-off — ${room.name}</div>
+      <div class="so-grid">${soHTML}</div>
+      <button class="so-btn${so?" done-btn":""}" onclick="completeRoom('${room.id}')" ${so?"disabled":""}>
+        ${so?"✓ Room complete":"Mark room complete"}
+      </button>
+    </div>
+    <div class="reset-row"><span>Reset all progress</span><button class="rst" onclick="resetAll()">Reset</button></div>`;
+}
+
+// ── RENDER GLOBAL PROGRESS ──
+function renderProgress(){
+  const{total,done}=globalStats();
+  const pct=total>0?Math.round(done/total*100):0;
+  document.getElementById("gpct").textContent=pct+"%";
+  document.getElementById("gbar").style.width=pct+"%";
+}
+
+// ── MAIN RENDER ──
+function render(){
+  renderFilters();
+  renderSidebar();
+  renderProgress();
+  if(S.roomF==="all"){
+    renderAllRooms();
+  } else {
+    renderSingleRoom();
+  }
+}
+
+// ── ACTIONS ──
+function setRoomFilter(v){
+  S.roomF=v;
+  if(v!=="all"){S.singleRoom=v;}
+  save();render();
+}
+function selectSingleRoom(id){S.singleRoom=id;save();renderSidebar();renderSingleRoom();renderProgress();}
+function setFreq(v){S.freq=v;save();render();}
+function setType(v){S.type=v;save();render();}
+function toggleTask(rId,pi,ti){
+  const k=tk(rId,pi,ti);S.tasks[k]=!S.tasks[k];save();
+  renderSidebar();renderProgress();
+  if(S.roomF==="all")renderAllRooms();else renderSingleRoom();
+}
+function toggleSO(rId,i){const k=sk(rId,i);S.signoffs[k]=!S.signoffs[k];save();renderSidebar();renderProgress();renderSingleRoom();}
+function completeRoom(rId){
+  const r=ROOMS.find(x=>x.id===rId);
+  r.signoff.forEach((_,i)=>{S.signoffs[sk(rId,i)]=true;});
+  r.phases.forEach((ph,pi)=>ph.tasks.forEach((t,ti)=>{if(taskVisible(t))S.tasks[tk(rId,pi,ti)]=true;}));
+  save();render();
+}
+function resetAll(){if(!confirm("Reset all progress?"))return;S.tasks={};S.signoffs={};save();render();}
+
+render();
+</script>
+</body>
+</html>
